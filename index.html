@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corousel (Scale Up Rezeki) — By Dedi Setiawan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { sans: ['Nunito', 'sans-serif'], mono: ['Courier New', 'monospace'] } } }
+        }
+    </script>
+    <style>
+        textarea::-webkit-scrollbar { width: 6px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .fade-in { animation: fadeIn 0.45s ease-out both; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+        .fw-card { transition: border-color 0.15s, background 0.15s; cursor: pointer; }
+        .fw-card.selected { border-color: #059669 !important; background: #ecfdf5 !important; }
+        .fw-card.selected .fw-title { color: #065f46; }
+        .input-error { border-color: #f87171 !important; }
+        .error-msg { color: #dc2626; font-size: 0.75rem; font-weight: 700; margin-top: 4px; display: none; }
+        .error-msg.show { display: block; }
+        .badge-COVER  { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+        .badge-ISI    { background: #eff6ff; color: #1e40af; border-color: #93c5fd; }
+        .badge-DALIL  { background: #fffbeb; color: #92400e; border-color: #fcd34d; }
+        .badge-CTA    { background: #fdf4ff; color: #7e22ce; border-color: #d8b4fe; }
+        /* Slide cards selalu putih bersih */
+        .slide-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.2s;
+        }
+        .slide-card:hover { border-color: #6ee7b7; }
+        /* Box prompt ChatGPT */
+        .prompt-box {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 11.5px;
+            line-height: 1.75;
+            color: #334155;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .prompt-box::-webkit-scrollbar { width: 5px; }
+        .prompt-box::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        /* Brand color swatch */
+        .swatch-btn {
+            width: 100%; aspect-ratio: 1; border-radius: 12px; cursor: pointer;
+            border: 3px solid transparent; position: relative; transition: transform 0.12s, border-color 0.12s;
+        }
+        .swatch-btn:hover { transform: scale(1.06); }
+        .swatch-btn.selected { border-color: #0f172a; }
+        .swatch-btn.selected::after {
+            content: '\2713'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 900; font-size: 16px; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white font-black text-base shadow">&#x1F54C;</div>
+            <div>
+                <h1 class="text-base md:text-lg font-black text-slate-900 leading-none tracking-tight">Corousel (Scale Up Rezeki)</h1>
+                <p class="text-[10px] font-bold text-emerald-700 tracking-widest uppercase mt-0.5">By Dedi Setiawan &middot; Prompt-Ready</p>
+            </div>
+        </div>
+        <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Siap Generate Prompt
+        </div>
+    </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+
+    <!-- INFO CARA PAKAI -->
+    <section class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-start gap-3">
+        <div class="text-2xl shrink-0">&#x1F4A1;</div>
+        <div>
+            <h2 class="font-black text-emerald-800 text-sm mb-1">Cara Pakai</h2>
+            <p class="text-xs text-emerald-700 font-semibold leading-relaxed">
+                Isi briefing di bawah &rarr; klik <strong>Generate Prompt &amp; Narasi</strong> &rarr; salin prompt tiap slide &rarr; tempel ke <strong>ChatGPT (DALL&middot;E)</strong> untuk dibuatkan gambarnya.
+                Setiap prompt sudah dioptimalkan agar <strong>aman dari filter konten</strong> — karakter dewasa, syar&rsquo;i, dan tidak ada deskripsi anak sebagai subjek utama.
+            </p>
+        </div>
+    </section>
+
+    <!-- BRIEFING -->
+    <section class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 md:p-8 border border-slate-100 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-50 rounded-bl-full opacity-40 pointer-events-none"></div>
+        <h2 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 relative">
+            <span class="bg-emerald-100 text-emerald-700 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black">1</span>
+            Client Briefing
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
+            <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1.5 uppercase tracking-widest">Nama Akun / Brand</label>
+                <input type="text" id="accountName" value="@parentingkeluarga.id" placeholder="@parentingkeluarga.id"
+                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none transition-colors text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1.5 uppercase tracking-widest">Niche Konten <span class="text-red-400">*</span></label>
+                <div class="relative">
+                    <select id="nicheCategory" onchange="onNicheCategoryChange()"
+                        class="w-full appearance-none bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none cursor-pointer text-sm transition-colors">
+                        <option value="">— Pilih Niche —</option>
+                        <option value="parenting">🍀 Parenting Islami</option>
+                        <option value="rumahtangga">💑 Rumah Tangga / Suami-Istri</option>
+                        <option value="pranikah">💍 Pranikah / Taaruf</option>
+                        <option value="custom">✏️ Lainnya (isi manual)</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+                <input type="text" id="niche" placeholder="Tulis niche kustom kamu..."
+                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none transition-colors text-sm mt-2 hidden">
+                <p id="err-niche" class="error-msg">Niche konten wajib dipilih.</p>
+                <div id="niche-tip" class="hidden mt-2 text-[11px] font-semibold rounded-lg px-3 py-2 border leading-relaxed"></div>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-extrabold text-slate-600 mb-1.5 uppercase tracking-widest">Topik Spesifik Carousel <span class="text-red-400">*</span></label>
+                <input type="text" id="topic" placeholder="Contoh: Mengontrol amarah saat anak tantrum menurut sunnah..."
+                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none transition-colors text-sm">
+                <p id="err-topic" class="error-msg">Topik carousel wajib diisi.</p>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-extrabold text-slate-600 mb-1.5 uppercase tracking-widest">Deskripsi Karakter Utama (MC)</label>
+                <textarea id="mcDesc" rows="2" placeholder="Contoh: Wanita Muslimah dewasa usia 30 tahun, berhijab pastel syar'i, gamis longgar, ekspresi lembut dan hangat."
+                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none transition-colors resize-y text-sm"></textarea>
+                <p class="text-[11px] text-amber-600 font-semibold mt-1.5 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200">
+                    &#x26A0; <strong>Tips aman filter:</strong> Selalu gunakan karakter dewasa (usia 25&ndash;35 tahun) sebagai MC. Anak boleh muncul hanya sebagai <em>siluet kecil di latar belakang</em>, bukan subjek utama. Ini mencegah ChatGPT menolak prompt.
+                </p>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-extrabold text-slate-600 mb-3 uppercase tracking-widest">Warna Brand Utama (konsisten di semua slide)</label>
+                <div class="grid grid-cols-4 sm:grid-cols-8 gap-2.5" id="brand-color-grid">
+                    <!-- diisi via JS dari brandColorPresets -->
+                </div>
+                <div class="flex items-center gap-3 mt-3 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2.5">
+                    <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest shrink-0">Custom Hex</span>
+                    <input type="color" id="brandColorCustomPicker" value="#2D7A4F" class="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer shrink-0" onchange="selectCustomBrandColor(this.value)">
+                    <input type="text" id="brandColorHex" value="#2D7A4F" placeholder="#2D7A4F"
+                        class="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 font-mono text-xs font-bold text-slate-700 outline-none focus:border-emerald-500"
+                        onchange="selectCustomBrandColor(this.value)">
+                </div>
+                <p class="text-[11px] text-slate-400 font-semibold mt-2">
+                    Semua slide akan memakai 1 warna brand ini &mdash; hanya <em>shade/tint</em>-nya (lebih terang/gelap) yang sedikit berbeda tiap slide agar tetap variatif tapi tetap senada &amp; konsisten secara branding.
+                </p>
+            </div>
+            <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1.5 uppercase tracking-widest">Jumlah Slide</label>
+                <div class="relative">
+                    <select id="slideCount" class="w-full appearance-none bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none cursor-pointer text-sm transition-colors">
+                        <option value="5">5 Slide &mdash; Ringkas</option>
+                        <option value="7" selected>7 Slide &mdash; Standar</option>
+                        <option value="9">9 Slide &mdash; Mendalam</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-extrabold text-slate-600 mb-1.5 uppercase tracking-widest">Tone Konten</label>
+                <div class="relative">
+                    <select id="tone" class="w-full appearance-none bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 rounded-xl px-4 py-3 font-semibold text-slate-800 outline-none cursor-pointer text-sm transition-colors">
+                        <option value="A" selected>Edukatif-serius</option>
+                        <option value="B">Santai-friendly</option>
+                        <option value="C">Inspiratif-emosional</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-xs font-extrabold text-slate-600 mb-3 uppercase tracking-widest flex items-center gap-2">
+                    <span class="bg-emerald-100 text-emerald-700 w-5 h-5 rounded text-[10px] font-black flex items-center justify-center">2</span>
+                    Pilih Framework Narasi
+                </label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="framework-grid">
+                    <div class="fw-card rounded-xl border-2 border-slate-200 px-3 py-3 text-center" onclick="selectFramework('BRIDGE', this)">
+                        <span class="fw-title block font-black text-slate-800 text-sm">THE BRIDGE</span>
+                        <span class="block text-[11px] font-semibold text-slate-400 mt-1">Hook &rarr; Dalil &rarr; CTA</span>
+                    </div>
+                    <div class="fw-card rounded-xl border-2 border-slate-200 px-3 py-3 text-center" onclick="selectFramework('AIDA', this)">
+                        <span class="fw-title block font-black text-slate-800 text-sm">AIDA</span>
+                        <span class="block text-[11px] font-semibold text-slate-400 mt-1">Attention &rarr; Action</span>
+                    </div>
+                    <div class="fw-card selected rounded-xl border-2 border-slate-200 px-3 py-3 text-center" onclick="selectFramework('PAS', this)">
+                        <span class="fw-title block font-black text-slate-800 text-sm">PAS</span>
+                        <span class="block text-[11px] font-semibold text-slate-400 mt-1">Problem &rarr; Solusi Islam</span>
+                    </div>
+                    <div class="fw-card rounded-xl border-2 border-slate-200 px-3 py-3 text-center" onclick="selectFramework('STORY', this)">
+                        <span class="fw-title block font-black text-slate-800 text-sm">STORYSELLING</span>
+                        <span class="block text-[11px] font-semibold text-slate-400 mt-1">Kisah &rarr; Dalil &rarr; CTA</span>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedFramework" value="PAS">
+            </div>
+        </div>
+        <div class="mt-8">
+            <button id="btn-generate" onclick="generateCarousel()"
+                class="w-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-base py-4 rounded-xl shadow-lg shadow-emerald-600/25 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Generate Prompt &amp; Narasi
+            </button>
+            <p id="err-general" class="text-center text-red-500 text-xs font-bold mt-2 hidden"></p>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <div id="results-container" class="hidden space-y-8">
+        <div class="flex items-center gap-3">
+            <div class="h-px bg-slate-200 flex-1"></div>
+            <span class="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <span class="bg-slate-200 text-slate-600 w-5 h-5 rounded text-[10px] font-black flex items-center justify-center">3</span>
+                Breakdown Slide + Prompt ChatGPT
+            </span>
+            <div class="h-px bg-slate-200 flex-1"></div>
+        </div>
+
+        <!-- Panduan Singkat -->
+        <div class="bg-sky-50 border border-sky-200 rounded-2xl p-4 flex items-start gap-3">
+            <span class="text-xl shrink-0">&#x1F3A8;</span>
+            <p class="text-xs text-sky-800 font-semibold leading-relaxed">
+                <strong>Cara pakai:</strong> Klik <strong>"Salin Prompt"</strong> di setiap slide &rarr; buka ChatGPT &rarr; tempel dan kirim. Background kartu sengaja putih bersih agar palet warna di dalam prompt tidak mengganggu tampilan teks di layar Anda.
+            </p>
+        </div>
+
+        <div id="slides-wrapper" class="space-y-5"></div>
+
+        <div class="flex items-center gap-3 mt-10">
+            <div class="h-px bg-slate-200 flex-1"></div>
+            <span class="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <span class="bg-slate-200 text-slate-600 w-5 h-5 rounded text-[10px] font-black flex items-center justify-center">4</span>
+                Caption &amp; Hashtag
+            </span>
+            <div class="h-px bg-slate-200 flex-1"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-md">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-black text-slate-800 text-sm flex items-center gap-2">&#x1F4F1; Caption Instagram</h4>
+                    <button onclick="copyContent('caption-text', this)" class="bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 border border-slate-200 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors">Salin</button>
+                </div>
+                <textarea id="caption-text" rows="9" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-medium text-slate-700 focus:outline-none focus:border-emerald-500 resize-y"></textarea>
+            </div>
+            <div class="bg-white border-2 border-slate-200 rounded-2xl p-5 shadow-md">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-black text-slate-800 text-sm flex items-center gap-2">#&#xFE0F;&#x20E3; Hashtag</h4>
+                    <button onclick="copyContent('hashtag-text', this)" class="bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 border border-slate-200 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors">Salin</button>
+                </div>
+                <textarea id="hashtag-text" rows="9" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-medium text-slate-700 focus:outline-none focus:border-emerald-500 resize-y"></textarea>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-slate-900 text-slate-500 py-6 mt-16 text-center text-xs font-semibold">
+    <p>Corousel (Scale Up Rezeki) &middot; by Dedi Setiawan <span class="text-emerald-500">&#x2726;</span> Prompt-Ready untuk ChatGPT &amp; DALL&middot;E</p>
+</footer>
+
+<script>
+/* ─── DATA ─────────────────────────────────────────────────── */
+const frameworks = {
+    BRIDGE: {
+        5: ['Cover / Hook (Masalah)', 'Analogi / Jembatan', 'Deep Why', 'Dalil / Hadits', 'Kesimpulan & CTA'],
+        7: ['Cover / Hook (Masalah)', 'Analogi 1', 'Analogi 2', 'Deep Why', 'Dalil / Hadits', 'Kesimpulan', 'CTA Engagement'],
+        9: ['Cover / Hook (Masalah)', 'Analogi 1', 'Analogi 2', 'Deep Why (Faktor 1)', 'Deep Why (Faktor 2)', 'Dalil / Hadits', 'Kesimpulan Praktis', 'Ajakan Perubahan', 'CTA Engagement']
+    },
+    AIDA: {
+        5: ['Cover / Attention (Hook)', 'Interest (Bangun Minat)', 'Desire (Keinginan)', 'Dalil / Hadits', 'Action (CTA)'],
+        7: ['Cover / Attention (Hook)', 'Interest (Fakta/Data)', 'Desire (Harapan)', 'Ajakan Bertindak Awal', 'Dalil / Hadits', 'Kesimpulan', 'Action (CTA)'],
+        9: ['Cover / Attention (Hook)', 'Interest 1 (Masalah Umum)', 'Interest 2 (Dampak)', 'Desire 1 (Kondisi Ideal)', 'Desire 2 (Solusi)', 'Ajakan Bertindak', 'Dalil / Hadits', 'Kesimpulan', 'Action (CTA)']
+    },
+    PAS: {
+        5: ['Cover / Problem (Hook)', 'Agitate (Perbesar Masalah)', 'Solution (Solusi Islami)', 'Dalil / Hadits', 'Kesimpulan & CTA'],
+        7: ['Cover / Problem (Hook)', 'Agitate (Dampak Buruk)', 'Solution (Konsep Islami)', 'Langkah Praktis', 'Dalil / Hadits', 'Kesimpulan', 'CTA Engagement'],
+        9: ['Cover / Problem (Hook)', 'Agitate 1 (Dampak ke Keluarga)', 'Agitate 2 (Dampak Spiritual)', 'Solution 1 (Mindset)', 'Solution 2 (Praktek)', 'Dalil / Hadits', 'Kesimpulan', 'Pesan Empati', 'CTA Engagement']
+    },
+    STORY: {
+        5: ['Cover / Pembuka Kisah (Hook)', 'Konflik Utama', 'Titik Balik / Pelajaran', 'Dalil / Hadits', 'Kesimpulan & CTA'],
+        7: ['Cover / Pembuka Kisah (Hook)', 'Latar Belakang', 'Konflik Memuncak', 'Titik Balik', 'Pelajaran Diambil', 'Dalil / Hadits', 'CTA Engagement'],
+        9: ['Cover / Pembuka Kisah (Hook)', 'Pengenalan Tokoh', 'Konflik Awal', 'Konflik Memuncak', 'Titik Balik (Hidayah)', 'Pelajaran 1', 'Pelajaran 2', 'Dalil / Hadits', 'CTA Engagement']
+    }
+};
+
+/* Preset warna brand utama — user pilih SATU, lalu semua slide pakai shade dari warna ini */
+const brandColorPresets = [
+    { hex: '#2D7A4F', name: 'Hijau Daun' },
+    { hex: '#C97B3E', name: 'Pasir Emas' },
+    { hex: '#6B4EAA', name: 'Ungu Khusyuk' },
+    { hex: '#C0522A', name: 'Terracotta' },
+    { hex: '#2A6BC0', name: 'Biru Langit' },
+    { hex: '#0E8080', name: 'Teal Laut' },
+    { hex: '#B03070', name: "Mawar Syar'i" },
+    { hex: '#1E293B', name: 'Slate Elegan' }
+];
+
+var selectedBrandColor = brandColorPresets[0].hex;
+
+function renderBrandColorSwatches() {
+    var grid = document.getElementById('brand-color-grid');
+    grid.innerHTML = brandColorPresets.map(function(c, i) {
+        return '<button type="button" class="swatch-btn' + (i === 0 ? ' selected' : '') + '" '
+            + 'style="background:' + c.hex + '" title="' + c.name + '" '
+            + 'onclick="selectBrandColor(\'' + c.hex + '\', this)"></button>';
+    }).join('');
+}
+
+function selectBrandColor(hex, el) {
+    selectedBrandColor = hex;
+    document.querySelectorAll('.swatch-btn').forEach(function(b) { b.classList.remove('selected'); });
+    if (el) el.classList.add('selected');
+    document.getElementById('brandColorHex').value = hex;
+    document.getElementById('brandColorCustomPicker').value = hex;
+}
+
+function selectCustomBrandColor(hex) {
+    if (!/^#([0-9A-Fa-f]{6})$/.test(hex)) return;
+    selectedBrandColor = hex;
+    document.querySelectorAll('.swatch-btn').forEach(function(b) { b.classList.remove('selected'); });
+    document.getElementById('brandColorHex').value = hex;
+    document.getElementById('brandColorCustomPicker').value = hex;
+}
+
+/* ── Generator shade/tint dari 1 warna brand ──────────────────
+   Mengembalikan beberapa varian (lebih terang/gelap/netral) dari
+   warna brand yang sama, supaya carousel tetap satu kesatuan warna
+   tapi tiap slide punya sedikit "nafas" visual yang berbeda. */
+function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
+}
+function rgbToHex(r, g, b) {
+    function c(v) { v = Math.max(0, Math.min(255, Math.round(v))); var s = v.toString(16); return s.length === 1 ? '0' + s : s; }
+    return '#' + c(r) + c(g) + c(b);
+}
+function mix(hex, targetHex, amount) {
+    var a = hexToRgb(hex), b = hexToRgb(targetHex);
+    return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+}
+function shadeOf(hex, amount) { /* amount > 0 = lebih terang ke putih, amount < 0 = lebih gelap ke hitam */
+    return amount >= 0 ? mix(hex, '#FFFFFF', amount) : mix(hex, '#000000', -amount);
+}
+
+/* Tiap slide mendapat 1 dari varian berikut, dari WARNA BRAND YANG SAMA */
+const shadeVariants = [
+    { bgAmount: 0.93, accentAmount: 0,    textAmount: -0.55, label: 'Tint Lembut' },
+    { bgAmount: 0.88, accentAmount: -0.1, textAmount: -0.6,  label: 'Tint Hangat' },
+    { bgAmount: 0.95, accentAmount: 0.1,  textAmount: -0.5,  label: 'Tint Cerah' },
+    { bgAmount: 0.90, accentAmount: -0.2, textAmount: -0.65, label: 'Tint Dalam' },
+    { bgAmount: 0.96, accentAmount: 0.05, textAmount: -0.45, label: 'Tint Pastel' },
+    { bgAmount: 0.85, accentAmount: -0.15,textAmount: -0.6,  label: 'Tint Kontras' },
+    { bgAmount: 0.92, accentAmount: 0.15, textAmount: -0.52, label: 'Tint Segar' },
+    { bgAmount: 0.87, accentAmount: -0.05,textAmount: -0.58, label: 'Tint Dalam 2' },
+];
+
+/* Shuffle array menggunakan Fisher-Yates (in-place), kembalikan array baru */
+function shuffleArray(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+}
+
+/* State per sesi generate — diisi ulang setiap klik Generate */
+var sessionShadeOrder    = [];
+var sessionTypoOrder     = [];
+var sessionShadeIdx      = 0;
+var sessionTypoIdx       = 0;
+
+function initSessionShuffle() {
+    /* Shuffle kedua array agar urutan acak setiap sesi */
+    sessionShadeOrder = shuffleArray(shadeVariants);
+    sessionTypoOrder  = shuffleArray(typographyStyles);
+    sessionShadeIdx   = 0;
+    sessionTypoIdx    = 0;
+}
+
+/* Ambil shade berikutnya dari sesi ini — tidak pernah sama dengan index sebelumnya */
+function getNextShade() {
+    var v = sessionShadeOrder[sessionShadeIdx % sessionShadeOrder.length];
+    sessionShadeIdx++;
+    return v;
+}
+
+/* Ambil tipografi berikutnya dari sesi ini — tidak pernah sama dengan index sebelumnya */
+function getNextTypo() {
+    var t = sessionTypoOrder[sessionTypoIdx % sessionTypoOrder.length];
+    sessionTypoIdx++;
+    return t;
+}
+
+function getSlidePalette(index) {
+    /* index masih diterima untuk kompatibilitas, tapi kita pakai session order */
+    var v = sessionShadeOrder[index % sessionShadeOrder.length];
+    return {
+        bg: shadeOf(selectedBrandColor, v.bgAmount),
+        accent: shadeOf(selectedBrandColor, v.accentAmount),
+        text: shadeOf(selectedBrandColor, v.textAmount),
+        name: v.label,
+        brandHex: selectedBrandColor
+    };
+}
+
+/* ─── VARIAN TIPOGRAFI KREATIF ───────────────────────────────
+   12 varian unik — keberagaman posisi (atas/tengah/bawah), alignment
+   (kiri/tengah/kanan), dan treatment (underline, badge, banner, quote,
+   kontras ukuran, tag label, dsb). Dirotasi ACAK per sesi generate
+   sehingga carousel berbeda tidak pernah dapat urutan yang identik. */
+const typographyStyles = [
+    {
+        name: 'Atas-Rata Kiri, Garis Bawah Stabilo',
+        desc: "POSISI TEKS: header rata KIRI (left-aligned), menempel di tepi atas kanvas (margin atas kecil, sekitar 5% dari tinggi kanvas). TIDAK ADA badge, TIDAK ADA kotak warna di belakang header. TREATMENT: hanya SATU kata/frasa kunci pada baris terakhir header diberi garis bawah tebal bergaya stabilo/highlighter berwarna aksen, sedikit tidak presisi (hand-drawn stroke), sisanya teks polos tanpa background apapun. Body text di bawahnya, rata kiri juga, dengan line-height lega. DILARANG menggunakan rounded rectangle/pill/badge di manapun pada teks slide ini."
+    },
+    {
+        name: 'Tengah, Badge Pil Miring Satu Kata',
+        desc: "POSISI TEKS: header rata TENGAH (center-aligned), dimulai dari sekitar 8% dari tepi atas kanvas. TREATMENT: seluruh header ditulis polos TANPA highlight/underline, KECUALI satu kata tunggal paling penting yang dibungkus dalam BADGE PIL (rounded full pill, bukan rounded rectangle) berwarna solid, dirotasi miring 4-6 derajat, dengan drop shadow tipis — badge ini ditempatkan SEJAJAR/INLINE di tengah baris teks, bukan di baris terpisah. Body text rata tengah, dipisahkan dari header oleh elemen garis horizontal tipis pendek (divider line) di tengah."
+    },
+    {
+        name: 'Atas, Tag Label Kecil + Angka',
+        desc: "POSISI TEKS: di paling atas kanvas (margin atas sangat kecil, ~3%), tampilkan dulu SMALL TAG berbentuk rounded-rectangle kecil (bukan pill, sudut lebih kotak) berisi label singkat huruf kapital dengan letter-spacing lebar (contoh: kategori topik), ukurannya jauh lebih kecil dari header (sekitar 1/5 tinggi header). Header BARU muncul DI BAWAH tag tersebut, rata KIRI, tanpa highlight/underline/badge apapun — polos dan bold saja. Body text di bawah header menggunakan custom bullet berbentuk titik kecil solid berwarna aksen (bukan dash atau bullet default), rata kiri."
+    },
+    {
+        name: 'Tengah-Bawah, Kotak Banner Solid Penuh',
+        desc: "POSISI TEKS: dimulai lebih ke tengah kanvas (sekitar 15-20% dari atas, bukan menempel di tepi atas). TREATMENT: SELURUH header (semua barisnya) berada DI DALAM satu BANNER/PITA WARNA SOLID PENUH selebar kanvas dengan sudut membulat lembut di kedua ujung kiri-kanan saja (bukan rounded rectangle penuh), teks header berwarna kontras tinggi (putih/krem) di atas banner tersebut, rata TENGAH. Body text berada DI LUAR banner (di bawahnya), pada area background biasa, rata tengah, tanpa elemen dekoratif tambahan."
+    },
+    {
+        name: 'Atas, Quote Italic Tanpa Background',
+        desc: "POSISI TEKS: rata KIRI, menempel tepi atas kanvas. TREATMENT: header ditulis dalam DUA gaya font berbeda dalam satu kalimat — kata-kata biasa dalam bold sans-serif tegak warna gelap netral, sedangkan SATU kata/frasa kunci emosional ditulis miring (italic) berwarna aksen, TANPA background/badge/underline apapun di balik kata tersebut (perbedaan dibuat HANYA lewat gaya huruf & warna, bukan elemen grafis tambahan). Tambahkan elemen tanda kutip besar dekoratif tipis transparan di pojok kiri atas sebagai watermark halus. Body text rata kiri, font reguler (non-italic) sepenuhnya."
+    },
+    {
+        name: 'Tengah, Dua Baris Ukuran Kontras Ekstrem',
+        desc: "POSISI TEKS: rata TENGAH, mulai dari ~6% dari tepi atas. TREATMENT: header HANYA dua baris dengan PERBEDAAN UKURAN EKSTREM — baris pertama berukuran kecil/sedang (sekitar 40% dari baris kedua), baris kedua (kata kunci utama) berukuran SANGAT BESAR memenuhi hampir seluruh lebar kanvas, TANPA badge/underline/banner apapun, hanya mengandalkan kontras ukuran huruf sebagai penekanan visual. Body text di bawah, rata tengah, ukuran kecil dan ringkas, dipisahkan dengan jarak (whitespace) yang lega dari header."
+    },
+    {
+        name: 'Kanan, Teks Bertumpuk Vertikal',
+        desc: "POSISI TEKS: rata KANAN (right-aligned), posisi vertikal di area tengah-atas kanvas (mulai ~10% dari atas). TREATMENT: header ditulis dengan setiap kata atau dua kata per baris — teks bertumpuk vertikal seperti kolom sempit di sisi kanan. Font header ultra-bold, tracking lebar. Kata/frasa kunci pada satu baris diberi warna aksen mencolok (bukan underline, bukan badge — hanya warna teks saja berbeda). Karakter/ilustrasi mengisi sisi KIRI kanvas sebagai kontrapuntik. Body text tetap rata kanan, ukuran lebih kecil, di bawah tumpukan header."
+    },
+    {
+        name: 'Tengah, Kotak Outline Saja (No Fill)',
+        desc: "POSISI TEKS: rata TENGAH, mulai ~7% dari tepi atas kanvas. TREATMENT: header dibungkus oleh BORDER/OUTLINE tipis (stroke only, background TRANSPARAN — tidak ada fill warna apapun di dalam kotak), sudut kotak sedikit membulat (bukan pill). Teks header di dalam kotak border ini berwarna gelap kontras. SATU kata kunci di dalam header diketik ALL CAPS dengan letter-spacing sangat lebar untuk penekanan. Body text di luar kotak, rata tengah, tanpa dekorasi tambahan apapun. Ciptakan nuansa clean editorial."
+    },
+    {
+        name: 'Bawah-Overlay, Header Di Atas Ilustrasi',
+        desc: "POSISI TEKS: header ditempatkan di BAWAH kanvas, overlap/menindih area atas karakter ilustrasi (bukan di area bersih). TREATMENT: beri layer semi-transparan GRADIEN gelap (dari transparan ke hitam/gelap, orientasi vertikal dari tengah ke bawah) sebagai alas teks agar tetap terbaca — BUKAN kotak solid. Teks header warna putih/krem bersih, rata KIRI, bold. Body text DI ATAS header (secara urutan visual dari bawah ke atas: ilustrasi → gradien overlay → header besar → body kecil). Kesan cinematic poster."
+    },
+    {
+        name: 'Atas-Kiri, Nomor Besar Dekoratif',
+        desc: "POSISI TEKS: rata KIRI, area atas kanvas. TREATMENT: tampilkan NOMOR SLIDE (angka 1 digit, ukuran SANGAT besar — hampir setinggi 3-4 baris header) di pojok kiri atas sebagai elemen dekoratif, berwarna aksen sangat pucat/transparansi tinggi (watermark number). Header teks nyata ditulis DI ATAS atau DI SAMPING nomor dekoratif ini, dengan font bold regular ukuran normal (tidak supersized). Body text di bawah, rata kiri, terpisah dari area nomor dekoratif. Kesan editorial/majalah."
+    },
+    {
+        name: 'Tengah, Garis Pembatas Kiri (Left Border Accent)',
+        desc: "POSISI TEKS: rata KIRI, tapi posisi blok teks dimulai dari agak tengah kanvas secara vertikal (~5% dari atas). TREATMENT: tambahkan GARIS VERTIKAL TEBAL berwarna aksen (lebar ~6-8px, tinggi sesuai tinggi blok header) di sisi paling kiri teks header — menempel di ujung kiri header, seperti left-border accent pada blockquote. Teks header sendiri TANPA background/badge/underline. Body text di bawah, juga rata kiri dengan indentasi yang sejajar dengan teks header (bukan bergeser). Kesan premium newsletter."
+    },
+    {
+        name: 'Tengah Kanvas, Teks Melingkar Dekoratif + Header Inti',
+        desc: "POSISI TEKS: header utama berada di TENGAH-TENGAH kanvas (baik horizontal maupun vertikal). TREATMENT: sekeliling header utama (yang bold, center, ukuran besar biasa) dihiasi TEKS DEKORATIF melingkar/arc — kata atau frasa pendek (bisa nama akun atau tagline singkat) diatur mengikuti kurva lingkaran di sekitar blok header, ukuran sangat kecil, huruf kapital semua, letter-spacing lebar, warna aksen pucat. Teks melingkar ini murni dekoratif dan tidak boleh menganggu keterbacaan header utama. Body text di bawah header, rata tengah. Kesan brand stamp/emblem."
+    }
+];
+
+/* ─── FRAMEWORK SELECTOR ──────────────────────────────────── */
+function selectFramework(value, el) {
+    document.querySelectorAll('.fw-card').forEach(function(c) { c.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById('selectedFramework').value = value;
+}
+
+/* ─── VALIDATION ──────────────────────────────────────────── */
+function validateInputs() {
+    var valid = true;
+    var nicheCat = document.getElementById('nicheCategory');
+    var nicheInput = document.getElementById('niche');
+    var nicheErr = document.getElementById('err-niche');
+    var nicheValid = nicheCat.value !== '';
+    /* Jika custom, wajib ada isian manual */
+    if (nicheCat.value === 'custom' && !nicheInput.value.trim()) nicheValid = false;
+    if (!nicheValid) {
+        nicheCat.classList.add('input-error');
+        nicheInput.classList.add('input-error');
+        nicheErr.classList.add('show');
+        valid = false;
+    } else {
+        nicheCat.classList.remove('input-error');
+        nicheInput.classList.remove('input-error');
+        nicheErr.classList.remove('show');
+    }
+    var topic = document.getElementById('topic');
+    var topicErr = document.getElementById('err-topic');
+    if (!topic.value.trim()) { topic.classList.add('input-error'); topicErr.classList.add('show'); valid = false; }
+    else { topic.classList.remove('input-error'); topicErr.classList.remove('show'); }
+    return valid;
+}
+
+/* ─── COPY HELPERS ────────────────────────────────────────── */
+function applyCopiedState(btn, orig) {
+    btn.innerHTML = '&#x2713; Disalin!';
+    btn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-700');
+    setTimeout(function() { btn.innerHTML = orig; btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-700'); }, 2000);
+}
+function copyToClipboard(text, btn, orig) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function() { applyCopiedState(btn, orig); }).catch(function() { fallbackCopy(text, btn, orig); });
+    } else { fallbackCopy(text, btn, orig); }
+}
+function fallbackCopy(text, btn, orig) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); applyCopiedState(btn, orig); } catch(e) {}
+    document.body.removeChild(ta);
+}
+function copyContent(id, btn) { copyToClipboard(document.getElementById(id).value, btn, btn.innerHTML); }
+function copySlidePrompt(n, btn) {
+    var el = document.getElementById('prompt-chatgpt-' + n);
+    if (!el) return;
+    copyToClipboard(el.innerText || el.textContent, btn, btn.innerHTML);
+}
+function copyEntireSlide(n, btn) {
+    var t = document.getElementById('teks-' + n);
+    var v = document.getElementById('prompt-chatgpt-' + n);
+    if (!t || !v) return;
+    var combined = '=== NARASI TEKS SLIDE ===\n' + t.value + '\n\n=== PROMPT CHATGPT / DALL\u00B7E ===\n' + (v.innerText || v.textContent);
+    copyToClipboard(combined, btn, btn.innerHTML);
+}
+
+/* ─── NARASI GENERATOR ────────────────────────────────────── */
+
+/* Kumpulan konten per topik kata kunci — sistem lookup sederhana */
+var contentBank = {
+    /* HOOK / COVER */
+    coverHooks: {
+        'Edukatif-serius': [
+            'Tahukah Ayah Bunda?\nIslam sudah punya jawabannya sejak 14 abad lalu.',
+            'Satu kesalahan kecil bisa berdampak besar.\nInilah yang perlu kita tahu.',
+            'Banyak yang tahu teorinya, tapi sedikit yang benar-benar mengamalkannya.',
+        ],
+        'Santai-friendly': [
+            'Hei Ayah Bunda! \uD83C\uDF31\nKita sering lupa hal penting ini, yuk diingat lagi.',
+            'Ssst... ini rahasia yang Rasulullah ajarkan dan sering kita lewatkan.',
+            'Pernah nggak sih ngerasa bingung banget soal ini? \uD83E\uDD14',
+        ],
+        'Inspiratif-emosional': [
+            'Berhentilah sejenak...\nNafas dalam. Baca ini pelan-pelan.',
+            'Ada momen di mana hati kita bertanya:\n"Sudahkah aku cukup baik?"',
+            'Setiap pejuang keluarga pasti pernah merasakan ini.',
+        ]
+    },
+    /* AGITATE */
+    agitate: [
+        'Tanpa disadari, kita sering terjebak dalam pola yang salah.\nDan anak-anak menyerap semuanya — diam-diam.',
+        'Kelelahan bukan hanya fisik.\nHati yang tidak dirawat perlahan kehilangan kepekaannya.',
+        'Ketika kita tidak punya panduan yang benar,\nkita hanya mengulang pola yang sama — generasi demi generasi.',
+        'Banyak orang tua yang sudah berusaha keras,\nnamun hasilnya tidak seperti yang diharapkan.\nMengapa? Karena pondasinya yang perlu diperbaiki.',
+    ],
+    /* SOLUTION */
+    solution: [
+        'Islam tidak hanya mengenali masalahnya —\nIslam sudah menyiapkan solusinya.',
+        'Rasulullah shallallahu \'alaihi wasallam memberikan panduan yang luar biasa:\nsederhana, terbukti, dan penuh hikmah.',
+        'Kuncinya bukan pada teknik modern yang rumit.\nKuncinya ada pada sunnah yang sudah ada ribuan tahun.',
+        'Tiga langkah yang diajarkan Islam dan terbukti melampaui zaman:',
+    ],
+    /* ANALOGI / BRIDGE */
+    analogi: [
+        'Bayangkan sebuah pohon yang tumbuh tanpa akar yang kuat.\nSemegah apapun batangnya — ia rapuh ketika badai datang.',
+        'Seperti kompas tanpa arah utara —\ntanpa fondasi yang benar, kita akan terus berputar di tempat yang sama.',
+        'Sebuah bangunan kokoh bukan dimulai dari atapnya.\nIa dimulai dari pondasi yang dalam dan kuat.',
+    ],
+    /* DEEP WHY / ISI UMUM */
+    deepWhy: [
+        'Masalahnya bukan pada kemampuan kita.\nMasalahnya ada pada cara pandang yang perlu diluruskan.',
+        'Mengapa hal ini penting?\nKarena apa yang kita tanam hari ini,\nakan dipanen oleh generasi yang akan datang.',
+        'Islam memandang ini bukan sebagai beban,\nmelainkan sebagai amanah yang mulia dari Allah SWT.',
+    ],
+    /* LANGKAH PRAKTIS */
+    praktis: [
+        '\u2022 Mulai dari niat yang tulus dan ikhlas\n\u2022 Bangun rutinitas kecil yang konsisten setiap hari\n\u2022 Libatkan keluarga — perubahan terbaik adalah yang dilakukan bersama',
+        '\u2022 Perbaiki hubungan dengan Allah terlebih dahulu\n\u2022 Jadikan rumah sebagai madrasah pertama\n\u2022 Bersabar — perubahan sejati butuh proses',
+        '\u2022 Pahami dulu sebelum bertindak\n\u2022 Istiqomah dalam hal kecil sebelum hal besar\n\u2022 Doakan keluarga di setiap sujud',
+    ],
+    /* PESAN EMPATI */
+    empati: [
+        'Tidak ada orang tua yang sempurna.\nTapi ada orang tua yang tidak berhenti belajar dan berusaha.\nAyah Bunda adalah salah satunya.',
+        'Setiap langkah kecil yang Ayah Bunda ambil hari ini\nadalah investasi terbesar untuk anak cucu kita.',
+        'Jika hari ini terasa berat,\ningat — Allah tidak membebani hamba-Nya melebihi kemampuannya.',
+    ],
+    /* TITIK BALIK / PELAJARAN */
+    pelajaran: [
+        'Di sinilah segalanya berubah —\nketika kita memilih kembali ke panduan Allah.',
+        'Pelajaran terbesar bukan datang dari buku,\nmelainkan dari keberanian untuk berubah.',
+        'Satu keputusan yang benar di momen yang tepat\nbisa mengubah arah seluruh keluarga.',
+    ],
+    /* ISI TAMBAHAN */
+    interest: [
+        'Fakta yang sering kita abaikan:\nPola dalam keluarga kita hari ini,\nakan menjadi template kehidupan anak-anak kita.',
+        'Riset modern baru membuktikan apa yang Islam sudah ajarkan berabad-abad lalu.\nItu bukan kebetulan — itu kebenaran.',
+        'Satu perubahan kecil yang konsisten\njauh lebih powerful dari perubahan besar yang hanya sesaat.',
+    ],
+    /* DESIRE */
+    desire: [
+        'Bayangkan keluarga yang tenang, harmonis, penuh kasih sayang.\nBukan mimpi — itu janji Allah bagi keluarga yang berpegang pada sunnah.',
+        'Ketika rumah kita menjadi surga kecil di dunia,\nanak-anak tumbuh dengan rasa aman dan cinta yang tulus.',
+        'Itulah kondisi ideal yang Allah inginkan untuk setiap keluarga Muslim.',
+    ]
+};
+
+function pickRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function generateSlideBody(label, topic, tone, accountName, index) {
+    var isCover    = index === 0;
+    var isCTA      = label.toLowerCase().indexOf('cta') >= 0;
+    var isDalil    = label.toLowerCase().indexOf('dalil') >= 0;
+    var isAgitate  = label.toLowerCase().indexOf('agitate') >= 0 || label.toLowerCase().indexOf('dampak') >= 0 || label.toLowerCase().indexOf('konflik') >= 0;
+    var isSolution = label.toLowerCase().indexOf('solution') >= 0 || label.toLowerCase().indexOf('solusi') >= 0 || label.toLowerCase().indexOf('langkah praktis') >= 0 || label.toLowerCase().indexOf('praktek') >= 0;
+    var isAnalogi  = label.toLowerCase().indexOf('analogi') >= 0 || label.toLowerCase().indexOf('jembatan') >= 0;
+    var isDeepWhy  = label.toLowerCase().indexOf('deep why') >= 0 || label.toLowerCase().indexOf('faktor') >= 0;
+    var isLangkah  = label.toLowerCase().indexOf('langkah') >= 0;
+    var isPelajaran = label.toLowerCase().indexOf('pelajaran') >= 0 || label.toLowerCase().indexOf('titik balik') >= 0 || label.toLowerCase().indexOf('hidayah') >= 0;
+    var isEmpati   = label.toLowerCase().indexOf('empati') >= 0;
+    var isInterest = label.toLowerCase().indexOf('interest') >= 0 || label.toLowerCase().indexOf('minat') >= 0 || label.toLowerCase().indexOf('fakta') >= 0;
+    var isDesire   = label.toLowerCase().indexOf('desire') >= 0 || label.toLowerCase().indexOf('harapan') >= 0 || label.toLowerCase().indexOf('ideal') >= 0;
+    var isKesimpulan = label.toLowerCase().indexOf('kesimpulan') >= 0;
+    var isAjakan   = label.toLowerCase().indexOf('ajakan') >= 0;
+    var isAttention = label.toLowerCase().indexOf('attention') >= 0;
+    var isLatar    = label.toLowerCase().indexOf('latar') >= 0 || label.toLowerCase().indexOf('latar belakang') >= 0;
+    var isKonflik  = label.toLowerCase().indexOf('konflik') >= 0;
+    var isTokoh    = label.toLowerCase().indexOf('tokoh') >= 0;
+
+    var topicFull  = topic;
+    var topicShort = topic.length > 50 ? topic.slice(0, 50) + '...' : topic;
+
+    /* ── Susun judul slide ── */
+    var judulMap = {
+        cover:      { 'Edukatif-serius': 'Inilah yang Sering Kita Abaikan...', 'Santai-friendly': 'Yuk Bahas Hal Penting Ini Bareng! \uD83C\uDF31', 'Inspiratif-emosional': 'Untukmu yang Sedang Berjuang...' },
+        agitate:    'Tanpa Disadari, Inilah Dampaknya...',
+        solution:   'Inilah Solusi dari Sunnah \uD83C\uDF31',
+        analogi:    'Sebuah Gambaran yang Membuat Kita Sadar',
+        deepwhy:    'Mengapa Ini Benar-Benar Penting?',
+        langkah:    '3 Langkah Praktis Sesuai Sunnah',
+        pelajaran:  'Inilah Titik Balik yang Mengubah Segalanya',
+        empati:     'Kamu Sudah Luar Biasa, Ayah Bunda \uD83E\uDE77',
+        interest:   'Fakta yang Jarang Kita Sadari',
+        desire:     'Beginilah Indahnya Keluarga yang Istiqomah',
+        kesimpulan: 'Apa yang Bisa Kita Ambil dari Semua Ini?',
+        ajakan:     'Saatnya Kita Bergerak Bersama',
+        latar:      'Kenali Dulu Akar Masalahnya',
+        konflik:    'Di Sinilah Banyak dari Kita Tersandung',
+        tokoh:      'Ada Kisah yang Mungkin Kita Kenali',
+        cta:        'Yuk Amalkan Bersama, Ayah Bunda! \uD83C\uDF3F',
+        dalil:      'Apa Kata Allah & Rasul-Nya?',
+        attention:  'Perhatikan Ini Baik-Baik!',
+        default:    '"' + topicShort + '"'
+    };
+
+    var judul;
+    if (isCover)      { var jm = judulMap.cover; judul = jm[tone] || jm['Edukatif-serius']; }
+    else if (isCTA)      judul = judulMap.cta;
+    else if (isDalil)    judul = judulMap.dalil;
+    else if (isAgitate || isKonflik) judul = judulMap.agitate;
+    else if (isSolution) judul = judulMap.solution;
+    else if (isAnalogi)  judul = judulMap.analogi;
+    else if (isDeepWhy)  judul = judulMap.deepwhy;
+    else if (isLangkah)  judul = judulMap.langkah;
+    else if (isPelajaran) judul = judulMap.pelajaran;
+    else if (isEmpati)   judul = judulMap.empati;
+    else if (isInterest || isAttention) judul = judulMap.interest;
+    else if (isDesire)   judul = judulMap.desire;
+    else if (isKesimpulan) judul = judulMap.kesimpulan;
+    else if (isAjakan)   judul = judulMap.ajakan;
+    else if (isLatar)    judul = judulMap.latar;
+    else if (isTokoh)    judul = judulMap.tokoh;
+    else                 judul = judulMap.default;
+
+    /* ── Susun isi body ── */
+    var body;
+
+    if (isCover) {
+        var hookPool = contentBank.coverHooks[tone] || contentBank.coverHooks['Edukatif-serius'];
+        var hookText = pickRandom(hookPool);
+        body = hookText + '\n\nTopik hari ini:\n\u201C' + topicFull + '\u201D\n\nSimpan dulu, baca sampai slide terakhir. \u2728';
+
+    } else if (isCTA) {
+        body = 'Perjalanan seribu langkah dimulai dari satu niat yang tulus.\nMulai hari ini, jadikan sunnah sebagai kompas keluarga kita.\n\n\u{1F49A} Like jika bermanfaat\n\u{1F516} Simpan agar tidak lupa\n\u{1F4E4} Bagikan \u2014 ini sedekah jariyah untuk Anda\n\n\uD83D\uDCAC Bagaimana pengalaman Ayah Bunda dengan topik ini?\nCerita di kolom komentar ya!';
+
+    } else if (isDalil) {
+        body = '\u{1F4D6} Cara mengisi slide dalil ini:\n\nCari di aplikasi Al-Qur\'an atau hadits yang relevan\ndengan topik \u201C' + topicFull + '\u201D,\nlalu masukkan dalam format berikut:\n\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n[Tulis teks Arab di sini]\n\n\u201CTerjemahan: ...\u201D\n(QS. .../HR. ... nomor ...)\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nSaran: Cari kata kunci \u201C' + topicShort + '\u201D\ndi aplikasi Quranku, Hadis Shahih, atau situs\nhttps://sunnah.com untuk hadits terpercaya.';
+
+    } else if (isAgitate || isKonflik) {
+        body = pickRandom(contentBank.agitate) + '\n\nDalam konteks \u201C' + topicFull + '\u201D,\nkita perlu jujur dengan diri sendiri:\nsudahkah kita benar-benar menjalankannya sesuai tuntunan Islam?';
+
+    } else if (isSolution) {
+        body = pickRandom(contentBank.solution) + '\n\n' + pickRandom(contentBank.praktis) + '\n\nSemua ini berangkat dari satu titik:\nniat yang lurus dan tawakal kepada Allah.';
+
+    } else if (isLangkah) {
+        body = '3 Langkah Nyata untuk \u201C' + topicShort + '\u201D:\n\n' + pickRandom(contentBank.praktis) + '\n\nMulai dari yang paling kecil.\nIstiqomah lebih baik dari yang besar namun hanya sesekali.';
+
+    } else if (isAnalogi) {
+        body = pickRandom(contentBank.analogi) + '\n\nBegitu pula dengan \u201C' + topicShort + '\u201D \u2014\ntanpa pondasi yang benar dari sunnah,\nusaha kita mungkin terasa berat dan tidak membuahkan hasil.';
+
+    } else if (isDeepWhy) {
+        body = pickRandom(contentBank.deepWhy) + '\n\nAllah berfirman bahwa setiap amanah ada pertanggungjawabannya.\nDan \u201C' + topicShort + '\u201D adalah bagian dari amanah itu.';
+
+    } else if (isPelajaran) {
+        body = pickRandom(contentBank.pelajaran) + '\n\nDari perjalanan memahami \u201C' + topicShort + '\u201D,\npelajaran terbesar adalah: kita tidak harus sempurna,\nkita hanya perlu terus bergerak ke arah yang benar.';
+
+    } else if (isEmpati) {
+        body = pickRandom(contentBank.empati) + '\n\nBertahan, berjuang, dan terus belajar\nadalah bukti cinta Ayah Bunda kepada keluarga.\nAllah melihat setiap usaha itu.';
+
+    } else if (isInterest || isAttention) {
+        body = pickRandom(contentBank.interest) + '\n\nTentang \u201C' + topicShort + '\u201D:\nbanyak yang menganggapnya sepele,\npadahal dampaknya luar biasa panjang.';
+
+    } else if (isDesire) {
+        body = pickRandom(contentBank.desire) + '\n\nDengan menerapkan prinsip Islam dalam \u201C' + topicShort + '\u201D,\nbukan hanya hubungan kita yang membaik \u2014\nberkah Allah pun akan mengalir ke seluruh rumah.';
+
+    } else if (isKesimpulan) {
+        body = 'Kesimpulan dari pembahasan kita hari ini:\n\n\u2705 Islam punya panduan lengkap untuk \u201C' + topicShort + '\u201D\n\u2705 Kuncinya bukan sempurna, tapi istiqomah\n\u2705 Mulai hari ini, mulai dari yang kecil\n\u2705 Minta pertolongan Allah di setiap langkah\n\nBarakallahu fiikum \uD83D\uDE4F';
+
+    } else if (isAjakan) {
+        body = 'Setelah memahami \u201C' + topicShort + '\u201D,\nsaatnya kita bergerak \u2014 bukan menunggu sempurna.\n\nMulai dari:\n\u2022 Satu niat yang diluruskan\n\u2022 Satu kebiasaan yang diperbaiki\n\u2022 Satu doa yang dipanjatkan untuk keluarga\n\nBersama kita bisa. Barakallahu fiikum!';
+
+    } else if (isLatar || isTokoh) {
+        body = 'Sebelum kita masuk lebih dalam,\npahami dulu konteksnya:\n\n\u201C' + topicFull + '\u201D\nbukan sekadar tema biasa \u2014\nini adalah bagian dari kehidupan yang kita jalani setiap hari.\n\nDan Islam punya pandangan yang sangat indah tentang ini.';
+
+    } else {
+        /* Fallback umum yang tetap berisi teks nyata */
+        body = 'Dalam topik \u201C' + topicFull + '\u201D,\nIslam mengajarkan kita untuk selalu kembali kepada fitrah.\n\n' + pickRandom(contentBank.deepWhy) + '\n\nSetiap langkah yang kita ambil berlandaskan sunnah\nadalah investasi untuk akhirat.';
+    }
+
+    return { judul: judul, body: body };
+}
+
+function generateTeks(label, index, topic, tone, accountName, framework) {
+    var jb = generateSlideBody(label, topic, tone, accountName, index);
+    return jb.judul + '\n\n' + jb.body + '\n\n\u2500\u2500\u2500\n' + accountName;
+}
+
+/* ─── NICHE-AWARE CHARACTER & SCENE DATA ─────────────────── */
+
+/* Pose pool per jenis slide per niche.
+   Setiap entri = { action, npcNote }
+   Dipilih ACAK per sesi generate (bukan fixed). */
+const nicheCharData = {
+    parenting: {
+        mc: function(mcDesc) {
+            return mcDesc ? sanitizeMC(mcDesc)
+                : "young Muslim mother, approximately 25–28 years old, wearing full hijab covering the chest, loose long gamis dress reaching down to cover her ankles, warm and gentle expression";
+        },
+        posePool: {
+            cover: [
+                { action: "sitting on the floor at eye-level with her small child, one hand resting gently near her chin in a calm listening pose", npc: "A small child (toddler, completely faceless — smooth blank oval face, no eyes, no mouth) sitting in front of the mother, facing her." },
+                { action: "kneeling on a prayer rug, hands open on her lap, looking downward in peaceful reflection", npc: "A small child silhouette (fully faceless) visible in the soft background, playing quietly." },
+                { action: "standing near a window with warm light, one hand gently holding an open book at her side", npc: "A small child (faceless, modest clothing) sitting cross-legged on a rug nearby." }
+            ],
+            cta: [
+                { action: "sitting comfortably on a floor cushion, both hands open in a warm welcoming gesture toward the viewer", npc: "No supporting character — focus on main character only, or a small fully-faceless child silhouette resting peacefully far in background." },
+                { action: "standing with a warm open posture, one hand slightly raised as if inviting the viewer", npc: "No child needed in frame — solo composition." }
+            ],
+            dalil: [
+                { action: "sitting cross-legged on a simple prayer rug, both hands raised in supplication (dua), head slightly bowed in reverence", npc: "No supporting characters. Silent and reverent atmosphere only." },
+                { action: "kneeling on a prayer rug, hands clasped gently in front, head bowed in quiet prayer", npc: "No supporting characters. Serene, minimal background." }
+            ],
+            agitate: [
+                { action: "sitting with shoulders slightly tense, one hand on her chest in a self-soothing gesture, near her child who looks slightly upset", npc: "A small child (completely faceless) nearby, posture slightly drooping." },
+                { action: "standing with arms gently crossed, head tilted in worry, near a scattered pile of children's toys", npc: "A small faceless child silhouette in the background, looking away." }
+            ],
+            solution: [
+                { action: "kneeling beside her child, both at the same eye level, one hand gently on the child's shoulder in a calm reassuring posture", npc: "A small faceless child facing the mother, posture relaxed and trusting." },
+                { action: "sitting together with the child on a soft rug, pointing gently to an open book between them", npc: "A small faceless child sitting close, engaged in the book." }
+            ],
+            default: [
+                { action: "sitting on the floor near her child, relaxed and attentive posture, leaning slightly forward", npc: "A young faceless child sitting nearby, engaged in a quiet activity." },
+                { action: "standing in a cozy room, arms at her sides in a natural relaxed pose", npc: "A small faceless child silhouette visible in the background." }
+            ]
+        },
+        bgPool: {
+            cover: ["warm cozy living room interior, soft daylight from a window, houseplant in a woven basket, low bookshelf, scattered children's toys on a rug", "bright family room with warm afternoon light, wooden floor, children's bookshelf, soft play mat"],
+            cta: ["bright tidy living room corner, soft warm afternoon light, small plant and cushions", "cozy home interior, warm golden hour light, minimal Islamic decor on the wall"],
+            dalil: ["a clean home prayer corner (mushola), simple patterned prayer rug, soft white light, serene atmosphere", "a tidy corner with a prayer rug and small shelf of books, soft natural light"],
+            agitate: ["living room at dusk, slightly warm-dim lighting, toys scattered on the floor, gentle chaos but cozy", "kitchen area with mild disorder, warm but slightly dim lighting, everyday family scene"],
+            solution: ["bright living room with soft natural light, organized toy basket, calm and hopeful atmosphere", "a peaceful reading nook with warm light, a bookshelf of children's books, a small plant"],
+            default: ["warm bright living room, minimalist modern-Islamic home decor, natural daylight", "cozy home interior, soft golden light, simple Islamic-inspired decor"]
+        }
+    },
+
+    rumahtangga: {
+        mc: function(mcDesc) {
+            return mcDesc ? sanitizeMC(mcDesc)
+                : "a Muslim married couple — the wife: a Muslim woman in her late 20s, wearing full hijab and a loose modest dress; the husband: a Muslim man in his late 20s, wearing a neat casual Muslim outfit (long trousers, collared shirt or koko), both completely faceless (smooth blank oval faces, no eyes, no mouth, no nose)";
+        },
+        posePool: {
+            cover: [
+                { action: "the couple sitting side by side on a sofa, a respectful small gap between them, both facing slightly toward each other in a warm conversation pose", npc: "No other characters needed. Calm domestic scene." },
+                { action: "the couple sitting at a dining table across from each other, a warm cup of tea between them, in a gentle conversation posture", npc: "No supporting characters. Quiet, intimate home atmosphere." }
+            ],
+            cta: [
+                { action: "both standing with open welcoming postures facing the viewer, husband and wife side by side with a respectful gap, warm smiles implied through body language", npc: "No supporting characters." },
+                { action: "the couple sitting on a rug, husband with an open hand gesture, wife with hands gently on her lap, facing forward together", npc: "No supporting characters." }
+            ],
+            dalil: [
+                { action: "both sitting on separate prayer rugs facing the same direction, in a prayer/reflection posture, husband slightly ahead to the right", npc: "No supporting characters. Spiritual, reverent scene." },
+                { action: "wife in supplication pose on prayer rug, husband seated nearby with hands resting on his knees in quiet contemplation", npc: "No supporting characters." }
+            ],
+            agitate: [
+                { action: "couple sitting with some distance apart on a sofa, one facing away slightly — body language suggests a quiet disagreement, no aggression, just visible emotional distance", npc: "No other characters. Quiet tense domestic atmosphere." },
+                { action: "wife standing near a window looking out, husband seated at a table looking at his hands — both slightly distant but not hostile", npc: "No supporting characters." }
+            ],
+            solution: [
+                { action: "couple sitting facing each other on the floor, the husband's posture open and listening, the wife's hands gently expressive in communication — warm and constructive body language", npc: "No supporting characters." },
+                { action: "couple walking side by side in a garden or hallway, maintaining a respectful gap but clearly in harmony — relaxed posture", npc: "No supporting characters." }
+            ],
+            default: [
+                { action: "the couple in a comfortable home setting, sitting near each other with warm open body language", npc: "No supporting characters." },
+                { action: "husband and wife in a tidy room, both in a natural at-home posture, warmth and calm visible in their demeanor", npc: "No supporting characters." }
+            ]
+        },
+        bgPool: {
+            cover: ["warm modern Islamic home interior, clean living room, soft curtains, a low shelf with a Quran and a small plant", "cozy family room with warm lighting, a soft sofa, wooden accents, a framed Islamic calligraphy on the wall"],
+            cta: ["bright tidy living room, afternoon sunlight through windows, soft warm tones", "simple modern Islamic home interior, clean and peaceful atmosphere"],
+            dalil: ["a quiet home prayer area, two simple prayer rugs laid out, soft diffused light", "a serene corner of a home with gentle natural light and minimal Islamic decoration"],
+            agitate: ["a living room at dusk, slightly dim warm lighting, ordinary furniture, the setting feels slightly tense but not dramatic", "a dining area with overhead warm light, table with everyday objects, quiet melancholic atmosphere"],
+            solution: ["a bright airy living room with warm natural light and minimal decor, calm and hopeful atmosphere", "a home garden or indoor space with soft greenery and warm light"],
+            default: ["a warm modern home interior, tasteful Islamic accents, soft lighting", "a tidy family living space with warm neutral tones and natural light"]
+        }
+    },
+
+    pranikah: {
+        mc: function(mcDesc) {
+            return mcDesc ? sanitizeMC(mcDesc)
+                : "a young Muslim woman in her mid-20s, wearing full syar'i hijab and a modest loose dress, completely faceless (smooth blank oval face, no eyes, no mouth, no nose). IMPORTANT NOTE: for pre-marital content, the main character is shown ALONE unless absolutely required by context — if two characters must appear, they must maintain a clear distance of at least 1 meter, NO physical contact, NO shared enclosed space";
+        },
+        posePool: {
+            cover: [
+                { action: "a young Muslim woman sitting alone on a bench or chair near a window, hands gently folded in her lap, a contemplative, hopeful posture — SOLO composition, no male character in frame", npc: "No supporting characters. Solitary, reflective atmosphere." },
+                { action: "a young Muslim woman standing near a bookshelf, holding a book lightly in one hand, looking down in quiet thought — SOLO composition", npc: "No supporting characters." }
+            ],
+            cta: [
+                { action: "a young Muslim woman standing facing forward with a gentle open posture, one hand slightly raised — warm, inviting to the viewer — SOLO composition", npc: "No supporting characters." },
+                { action: "a young Muslim woman sitting at a small desk with an open notebook in front of her, hands resting near it, posture forward and engaged — SOLO composition", npc: "No supporting characters." }
+            ],
+            dalil: [
+                { action: "a young Muslim woman in supplication pose (both hands raised in dua) on a prayer rug — SOLO composition, reverent", npc: "No supporting characters." },
+                { action: "a young Muslim woman seated with an open Quran in her lap, head gently bowed — SOLO spiritual composition", npc: "No supporting characters." }
+            ],
+            agitate: [
+                { action: "a young Muslim woman sitting alone with a slightly introspective, contemplative posture — one hand near her chin — conveying quiet inner struggle, SOLO, no dramatic distress", npc: "No supporting characters." },
+                { action: "a young Muslim woman standing near a window looking out with a pensive posture — SOLO, soft mood", npc: "No supporting characters." }
+            ],
+            solution: [
+                { action: "a young Muslim woman sitting at a study desk writing in a journal or reading a book about Islamic marriage guidance — energized, purposeful posture — SOLO composition", npc: "No supporting characters." },
+                { action: "a young Muslim woman holding a small flower or a Quran near her chest in a joyful, hopeful posture — SOLO composition", npc: "No supporting characters." }
+            ],
+            default: [
+                { action: "a young Muslim woman in a calm, dignified posture in a comfortable home setting — SOLO composition", npc: "No supporting characters." },
+                { action: "a young Muslim woman sitting on a chair or floor cushion in a cozy room, relaxed and contemplative — SOLO composition", npc: "No supporting characters." }
+            ]
+        },
+        bgPool: {
+            cover: ["a bright minimal room with soft pastel tones, a window with sheer curtains, a small plant — calm and hopeful atmosphere", "a clean modern bedroom or study area, soft natural light, a bookshelf with Islamic books"],
+            cta: ["a tidy light-filled room, soft warm afternoon tones, minimal decor — inviting and clean", "a cozy corner with warm lighting and simple Islamic decorative elements"],
+            dalil: ["a quiet serene home prayer corner, a simple prayer rug, soft natural light — reverent and peaceful", "a tidy corner with a Quran on a small stand, soft light, minimal background"],
+            agitate: ["a quiet room at soft dusk light, a slight sense of contemplation and uncertainty in the setting, but NOT dramatic — just still and thoughtful", "a bedroom or study with soft neutral tones, ordinary everyday objects, quietly introspective mood"],
+            solution: ["a bright study space or living room with warm light and a small bookshelf, a positive and purposeful atmosphere", "a light-filled airy room with greenery and soft tones — hopeful and peaceful"],
+            default: ["a clean modern home interior with soft warm light and minimal Islamic decor", "a simple bright room with natural light and a warm, gentle atmosphere"]
+        },
+        /* Peringatan syar'i ekstra untuk niche pranikah */
+        shariahWarning: [
+            '  • PRANIKAH CONTENT — STRICT RULES: Main character is ALWAYS shown ALONE unless the scene absolutely requires two people (e.g., a supervised taaruf context); even then, the two characters MUST be at least 1 meter apart with NO physical contact of any kind (no touching, no handshaking, no shoulder contact).',
+            '  • DO NOT depict two unrelated people (non-mahram) in an enclosed private space together (no shared room, no car interior, no closed indoor space with just the two of them).',
+            '  • DO NOT show any physical closeness, leaning toward each other, or romantic body language between non-mahram characters.',
+            '  • If the scene shows a male and female character, they must be in an open or semi-open setting (garden, public courtyard, family room with implied open access), not in an intimate enclosed setting.',
+            '  • Preferably: use a SOLO female character composition (single subject) for almost all slides in pranikah content.'
+        ]
+    }
+};
+
+/* Helper: pilih aksi & NPC dari pool berdasarkan label slide (acak per sesi) */
+function getNicheCharacter(niche, label, mcDesc) {
+    var data = nicheCharData[niche] || nicheCharData['parenting'];
+    var mc   = data.mc(mcDesc);
+
+    /* Tentukan jenis slide */
+    var isCover    = label.toLowerCase().indexOf('cover') >= 0 || label.toLowerCase().indexOf('hook') >= 0 || label.toLowerCase().indexOf('pembuka') >= 0 || label.toLowerCase().indexOf('attention') >= 0;
+    var isCTA      = label.toLowerCase().indexOf('cta') >= 0;
+    var isDalil    = label.toLowerCase().indexOf('dalil') >= 0 || label.toLowerCase().indexOf('hadits') >= 0;
+    var isAgitate  = label.toLowerCase().indexOf('agitate') >= 0 || label.toLowerCase().indexOf('dampak') >= 0 || label.toLowerCase().indexOf('konflik') >= 0;
+    var isSolution = label.toLowerCase().indexOf('solution') >= 0 || label.toLowerCase().indexOf('solusi') >= 0 || label.toLowerCase().indexOf('langkah') >= 0 || label.toLowerCase().indexOf('praktek') >= 0;
+
+    var pool = data.posePool;
+    var poses = isCover ? pool.cover : isCTA ? pool.cta : isDalil ? pool.dalil : isAgitate ? pool.agitate : isSolution ? pool.solution : pool.default;
+    var bgs   = data.bgPool;
+    var bgList = isCover ? bgs.cover : isCTA ? bgs.cta : isDalil ? bgs.dalil : isAgitate ? bgs.agitate : isSolution ? bgs.solution : bgs.default;
+
+    var pose = poses[Math.floor(Math.random() * poses.length)];
+    var bg   = bgList[Math.floor(Math.random() * bgList.length)];
+
+    return {
+        mc: mc,
+        action: pose.action,
+        npcNote: pose.npc,
+        background: bg,
+        shariahExtra: (niche === 'pranikah') ? data.shariahWarning : []
+    };
+}
+
+/* ─── PROMPT CHATGPT GENERATOR (AMAN FILTER + NICHE-AWARE) ── */
+function sanitizeMC(mcDesc) {
+    /* Hapus/ganti kata-kata yang bisa trigger content policy terkait anak/minor */
+    return mcDesc
+        .replace(/\b(anak kecil|anak\s*perempuan|anak\s*laki|gadis kecil|bocah|balita|bayi|remaja|teenager|teen|minor|girl|boy)\b/gi, 'perempuan dewasa muda')
+        .replace(/\busia\s+\d{1,2}\s*(tahun|thn|th)\b/gi, 'usia 28 tahun')
+        .replace(/\bberumur\s+\d{1,2}\b/gi, 'berumur 28 tahun');
+}
+
+function generatePromptChatGPT(label, index, topic, mcDesc, palette, accountName, judulSlide, bodySlide, typo, niche) {
+    var isCover    = index === 0;
+    var isCTA      = label.toLowerCase().indexOf('cta') >= 0;
+    var isDalil    = label.toLowerCase().indexOf('dalil') >= 0;
+    var isAgitate  = label.toLowerCase().indexOf('agitate') >= 0 || label.toLowerCase().indexOf('dampak') >= 0 || label.toLowerCase().indexOf('konflik') >= 0;
+    var isSolution = label.toLowerCase().indexOf('solution') >= 0 || label.toLowerCase().indexOf('solusi') >= 0 || label.toLowerCase().indexOf('langkah') >= 0;
+
+    /* Ambil data karakter & scene dari sistem niche-aware */
+    var charData = getNicheCharacter(niche || 'parenting', label, mcDesc);
+    var safeMC   = charData.mc;
+    var action   = charData.action;
+    var npcNote  = charData.npcNote;
+    var bg       = charData.background;
+    var shariahExtra = charData.shariahExtra;
+
+    var topicShort = topic.length > 65 ? topic.slice(0, 65) + '...' : topic;
+
+    /* Tentukan apakah anak/NPC muncul dalam layout note */
+    var hasChildInLayout = (niche !== 'pranikah') && !isDalil && !isCTA;
+
+    var lines = [
+        '\uD83C\uDFA8 PROMPT CHATGPT / DALL\u00B7E \u2014 Slide ' + (index + 1) + ': ' + label,
+        '\u2501'.repeat(48),
+        '',
+        'Create a portrait-format (4:5 ratio, e.g. 1080x1350px) modern flat-illustration digital artwork for an Instagram carousel slide. The text below MUST be rendered directly onto the image as part of the design (this is a text-on-image social media graphic, NOT a plain illustration without text).',
+        '',
+        'ART STYLE: Modern flat/semi-flat digital illustration, clean bold vector-like shapes, soft cel-shading, warm inviting color blocking, slightly rounded friendly proportions (NOT chibi, NOT photorealistic, NOT watercolor-washed \u2014 think clean modern Instagram-infographic illustration style similar to popular parenting/lifestyle content accounts). Smooth outlines, confident flat color fills, soft ambient shadows for depth.',
+        '',
+        'MAIN CHARACTER (keep facial style, hijab style, and proportions 100% consistent across all slides in this carousel):',
+        safeMC + '. IMPORTANT: Do NOT draw visible eyes, nose, or mouth \u2014 her face is a smooth, soft blank area (faceless illustration style, standard for this content style). She is ' + action + '.',
+        '',
+        'SUPPORTING CHARACTER: ' + npcNote,
+        '',
+        'BACKGROUND / SETTING: ' + bg,
+        '',
+        'BRAND COLOR (HARUS konsisten di SETIAP slide carousel ini \u2014 ini adalah satu-satunya warna identitas brand, jangan diganti warna lain): ' + palette.brandHex,
+        '',
+        'COLOR PALETTE for THIS SPECIFIC slide (shade/tint \u201C' + palette.name + '\u201D dari brand color di atas \u2014 TETAP dalam keluarga warna yang sama, hanya terang/gelapnya yang berbeda dari slide lain):',
+        '  \u2022 Dominant background tone: ' + palette.bg,
+        '  \u2022 Accent color (clothing detail, highlight elements, decorative shapes): ' + palette.accent,
+        '  \u2022 Deep text/contrast color: ' + palette.text,
+        '  \u2022 DILARANG menambahkan warna lain di luar keluarga warna brand ini (no random additional hues) \u2014 boleh near-white/cream/charcoal netral sebagai pelengkap saja.',
+        '',
+        '\u2501'.repeat(48),
+        '\uD83D\uDCDD TEKS YANG WAJIB DITULISKAN DI DALAM GAMBAR (verbatim, jangan diubah):',
+        '\u2501'.repeat(48),
+        '',
+        'HEADER (judul utama, paling dominan secara visual):',
+        '"' + judulSlide + '"',
+        '',
+        'BODY TEXT (kalimat pendukung di bawah header, ukuran lebih kecil dari header):',
+        '"' + bodySlide + '"',
+        '',
+        'FOOTER (kredit akun, kecil, di dalam floating patch melengkung di tengah bawah gambar):',
+        '"' + accountName + '"',
+        '',
+        '\u2501'.repeat(48),
+        '\u2728 GAYA TIPOGRAFI WAJIB UNTUK SLIDE INI \u2014 "' + typo.name + '" (BERBEDA dari slide lain di carousel ini, JANGAN gunakan layout/treatment dari slide sebelumnya):',
+        '\u2501'.repeat(48),
+        typo.desc,
+        '',
+        'PENTING: Ikuti instruksi posisi & treatment teks di atas SECARA HARFIAH dan PERSIS \u2014 jangan menggantinya dengan layout "badge rounded di tengah" sebagai default, kecuali instruksi di atas memang menyebut badge/pill. Jika instruksi menyebut "TANPA badge" atau "DILARANG menggunakan rounded rectangle", maka benar-benar JANGAN render badge/pill/kotak warna apapun di balik teks.',
+        '',
+        'Font header: bold rounded sans-serif (gaya seperti Poppins/Baloo/Nunito ExtraBold). Font body text: sans-serif medium/regular, lebih kecil, mudah dibaca, line-height lega. Font footer: sans-serif light, kecil, ditempatkan dalam floating pill/rounded-rectangle patch warna solid (memakai accent color di atas) di tengah bawah gambar, dengan sedikit drop shadow agar terlihat "mengambang" di atas ilustrasi.',
+        '',
+        'LAYOUT: Karakter ditempatkan di area BAWAH kanvas, mengisi sekitar 45\u201355% tinggi kanvas, dengan ekspresi tubuh/pose yang jelas dan hangat. Posisi & alignment blok teks HEADER dan BODY TEXT mengikuti instruksi gaya tipografi di atas \u2014 area ini harus tetap kontras dan mudah dibaca, jangan sampai tertutup elemen ilustrasi. Beri sedikit ruang napas (padding) di semua sisi kanvas.',
+        '',
+        'TOPIC CONTEXT (referensi suasana/emosi saja, bukan untuk ditulis di gambar): "' + topicShort + '"',
+        '',
+        'CRITICAL RULES \u2014 MUST FOLLOW:',
+        '  \u2022 Teks pada gambar HARUS sama persis (verbatim) dengan HEADER, BODY TEXT, dan FOOTER di atas \u2014 jangan menambah, mengurangi, atau menerjemahkan',
+        '  \u2022 NO visible eyes, nose, or mouth on ANY character (strictly faceless illustration style)',
+        '  \u2022 ALL female figures MUST wear full hijab covering the chest, loose long dress/gamis covering legs down to the ankle',
+        '  \u2022 ALL male figures (if any) must have hair drawn and wear trousers below the knee',
+        (hasChildInLayout ? '  \u2022 Children may appear as supporting characters (faceless), but the clearly ADULT main character remains the main focal character' : '  \u2022 No child figures in this slide \u2014 adult main character only'),
+        '  \u2022 NO depiction of divine beings (Allah SWT) or sacred symbols used inappropriately',
+        '  \u2022 NO violence, extreme distress, tears, or disturbing expressions \u2014 keep emotional tone gentle even on "problem" slides',
+        '  \u2022 Keep the illustration family-friendly, warm, educational, and visually scroll-stopping for Instagram'
+    ].concat(shariahExtra.map(function(s) { return s; }));
+
+    return lines.join('\n');
+}
+
+/* ─── SLIDE CARD BUILDER ──────────────────────────────────── */
+function buildSlideCard(slideNum, label, index, teksContent, promptContent) {
+    var isCover = index === 0;
+    var isCTA   = label.toLowerCase().indexOf('cta') >= 0;
+    var isDalil = label.toLowerCase().indexOf('dalil') >= 0;
+    var slideType = isCover ? 'COVER' : (isCTA ? 'CTA' : (isDalil ? 'DALIL' : 'ISI'));
+    var delay = (index * 0.07).toFixed(2);
+
+    /* Escape teks untuk textarea */
+    var safeTeks = teksContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    return '<div id="slide-card-' + slideNum + '" class="slide-card rounded-3xl p-5 md:p-6 fade-in" style="animation-delay:' + delay + 's">'
+        + '<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">'
+            + '<div class="flex items-center gap-2 flex-wrap">'
+                + '<span class="bg-white text-slate-800 font-black px-3 py-1 rounded-full shadow-sm border border-slate-200 text-xs">SLIDE ' + slideNum + '</span>'
+                + '<span class="badge-' + slideType + ' border text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full">' + slideType + '</span>'
+                + '<span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">' + label + '</span>'
+            + '</div>'
+            + '<button onclick="copyEntireSlide(' + slideNum + ', this)" class="bg-white hover:bg-emerald-500 hover:text-white text-slate-600 border border-slate-200 hover:border-emerald-600 font-bold text-xs px-3 py-2 rounded-xl shadow-sm transition-all flex items-center gap-1.5 shrink-0">'
+                + '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>'
+                + 'Salin Semua'
+            + '</button>'
+        + '</div>'
+        + '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">'
+            /* Narasi Teks */
+            + '<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">'
+                + '<h4 class="font-black text-xs text-slate-600 mb-3 flex items-center gap-1.5 uppercase tracking-widest">&#x1F4DD; Narasi Teks Slide</h4>'
+                + '<textarea id="teks-' + slideNum + '" rows="15" class="w-full bg-transparent border-0 focus:ring-0 p-0 text-sm font-semibold text-slate-800 resize-y leading-relaxed">' + safeTeks + '</textarea>'
+            + '</div>'
+            /* Prompt ChatGPT */
+            + '<div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">'
+                + '<div class="flex items-center justify-between mb-3">'
+                    + '<h4 class="font-black text-xs text-slate-600 flex items-center gap-1.5 uppercase tracking-widest">&#x1F3A8; Prompt ChatGPT / DALL&middot;E</h4>'
+                    + '<button onclick="copySlidePrompt(' + slideNum + ', this)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 shrink-0">'
+                        + '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>'
+                        + 'Salin Prompt'
+                    + '</button>'
+                + '</div>'
+                + '<div id="prompt-chatgpt-' + slideNum + '" class="prompt-box">' + promptContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'
+            + '</div>'
+        + '</div>'
+    + '</div>';
+}
+
+/* ─── MAIN GENERATE ──────────────────────────────────────── */
+function generateCarousel() {
+    if (!validateInputs()) {
+        var errEl = document.getElementById('err-general');
+        errEl.textContent = 'Lengkapi field wajib sebelum melanjutkan.';
+        errEl.classList.remove('hidden');
+        setTimeout(function() { errEl.classList.add('hidden'); }, 4000);
+        return;
+    }
+
+    var accountName = document.getElementById('accountName').value.trim() || '@parentingkeluarga.id';
+    var nicheCat    = document.getElementById('nicheCategory').value;
+    var nicheCustom = document.getElementById('niche').value.trim();
+    var nicheLabel  = nicheCat === 'custom' ? nicheCustom
+                    : nicheCat === 'parenting' ? 'Parenting Islami'
+                    : nicheCat === 'rumahtangga' ? 'Rumah Tangga Islami'
+                    : nicheCat === 'pranikah' ? 'Pranikah & Taaruf'
+                    : nicheCustom || 'Islami';
+    var niche       = nicheCat || 'parenting'; /* kode niche untuk logika karakter */
+
+    var topic       = document.getElementById('topic').value.trim();
+    var mcDesc      = document.getElementById('mcDesc').value.trim();
+    var count       = parseInt(document.getElementById('slideCount').value);
+    var toneCode    = document.getElementById('tone').value;
+    var framework   = document.getElementById('selectedFramework').value;
+    var toneMap     = { A: 'Edukatif-serius', B: 'Santai-friendly', C: 'Inspiratif-emosional' };
+    var tone        = toneMap[toneCode];
+    var structure   = frameworks[framework][count];
+
+    /* 🎲 Inisialisasi shuffle baru per sesi — kunci anti-monoton */
+    initSessionShuffle();
+
+    var btn = document.getElementById('btn-generate');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="w-4 h-4 spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="60" stroke-linecap="round"/></svg> Menyusun prompt...';
+
+    var wrapper = document.getElementById('slides-wrapper');
+    wrapper.innerHTML = '';
+
+    structure.forEach(function(label, index) {
+        var palette = getSlidePalette(index);
+        /* Ambil tipografi dari urutan sesi yang sudah di-shuffle */
+        var typo    = sessionTypoOrder[index % sessionTypoOrder.length];
+        var jb            = generateSlideBody(label, topic, tone, accountName, index);
+        var teksContent   = jb.judul + '\n\n' + jb.body + '\n\n\u2500\u2500\u2500\n' + accountName;
+        var promptContent = generatePromptChatGPT(label, index, topic, mcDesc, palette, accountName, jb.judul, jb.body, typo, niche);
+        wrapper.insertAdjacentHTML('beforeend', buildSlideCard(index + 1, label, index, teksContent, promptContent));
+    });
+
+    document.getElementById('results-container').classList.remove('hidden');
+    setTimeout(function() {
+        document.getElementById('results-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
+    /* Caption & Hashtag — disesuaikan dengan niche */
+    var nicheGreeting = niche === 'pranikah' ? 'Sobat Hijrah' : niche === 'rumahtangga' ? 'Sahabat Keluarga' : 'Ayah/Bunda';
+    var captionText = nicheGreeting + ', pernah nggak merasa terjebak dalam "' + topic + '"?\n\n'
+        + 'Kita sering lupa bahwa Islam sudah menyediakan panduan sempurna untuk setiap babak kehidupan \u2014 termasuk yang terasa paling berat sekalipun.\n\n'
+        + '\uD83C\uDF3F Simpan dulu, baca pelan-pelan, amalkan bersama.\n\n'
+        + '\uD83D\uDC47 Bagian mana yang paling kena di hati? Tulis di kolom komentar ya!\n\n'
+        + 'Follow ' + accountName + ' untuk konten ' + nicheLabel + ' Islami setiap hari \u2728';
+
+    var nicheSlug = nicheLabel.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 18);
+    var topicSlug = topic.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 18);
+    var nicheHashtags = niche === 'pranikah'
+        ? '#pranikahislami #taaruf #nikahsunnah #persiapannikah #jodohislami #caranikah #pranikah #pilihjodoh'
+        : niche === 'rumahtangga'
+        ? '#rumahtanggaislami #suamiistri #keluargamuslim #harmonisrumahtangga #cintaislami #keluargabahagia #marriageislam #komunikasipernikahan'
+        : '#parentingislami #mendidikanak #anaksoleh #keluargamuslim #ibumuslimah #ayahmuslim #parentingtips #generasiqurani';
+    var hashtagText = '#kontenislami #' + nicheSlug + ' #' + topicSlug + ' #islamiccontent #carouselislami #dakwahislam #kehidupanislami #qurandanhikmah #muslimah ' + nicheHashtags + ' #motivasiislam #hikmahislam #islamicreminder #sunnah #islamicpost #muhasabah #islamicliving';
+
+    document.getElementById('caption-text').value = captionText;
+    document.getElementById('hashtag-text').value = hashtagText;
+
+    btn.disabled = false;
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Generate Prompt &amp; Narasi';
+}
+
+/* ─── NICHE SELECTOR HANDLER ──────────────────────────────── */
+var nicheTips = {
+    parenting: {
+        cls: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        text: '🍀 <strong>Parenting Islami</strong> — Karakter utama: ibu Muslimah dewasa + anak (faceless). Konten seputar mendidik, tumbuh kembang, dan pola asuh sesuai sunnah.'
+    },
+    rumahtangga: {
+        cls: 'text-blue-700 bg-blue-50 border-blue-200',
+        text: '💑 <strong>Rumah Tangga</strong> — Karakter utama: pasangan suami-istri (keduanya faceless & syar\'i). Konten komunikasi, harmoni, dan cinta dalam pernikahan Islami.'
+    },
+    pranikah: {
+        cls: 'text-amber-700 bg-amber-50 border-amber-200',
+        text: '💍 <strong>Pranikah / Taaruf</strong> — ⚠️ Mode ketat syar\'i aktif. Karakter tampil <em>solo</em> sebisa mungkin. Jika dua karakter diperlukan: jarak aman ≥1 meter, tanpa sentuhan fisik, bukan tempat tertutup (non-mahram).'
+    },
+    custom: {
+        cls: 'text-slate-600 bg-slate-50 border-slate-200',
+        text: '✏️ <strong>Niche Kustom</strong> — Isi nama niche di kolom di bawah. Sistem karakter akan default ke template parenting; sesuaikan deskripsi MC sesuai kebutuhan.'
+    }
+};
+
+function onNicheCategoryChange() {
+    var cat = document.getElementById('nicheCategory').value;
+    var nicheInput = document.getElementById('niche');
+    var tipBox = document.getElementById('niche-tip');
+
+    /* Tampilkan/sembunyikan input manual */
+    if (cat === 'custom') {
+        nicheInput.classList.remove('hidden');
+    } else {
+        nicheInput.classList.add('hidden');
+        nicheInput.value = '';
+    }
+
+    /* Tampilkan tip */
+    if (cat && nicheTips[cat]) {
+        tipBox.className = 'mt-2 text-[11px] font-semibold rounded-lg px-3 py-2 border leading-relaxed ' + nicheTips[cat].cls;
+        tipBox.innerHTML = nicheTips[cat].text;
+        tipBox.classList.remove('hidden');
+    } else {
+        tipBox.classList.add('hidden');
+    }
+}
+
+/* ─── INIT ────────────────────────────────────────────────── */
+renderBrandColorSwatches();
+
+</script>
+</body>
+</html>
